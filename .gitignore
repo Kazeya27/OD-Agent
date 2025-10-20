@@ -1,0 +1,9 @@
+__pycache__
+logs
+*.npz
+*.csv
+*.json
+*.pth
+*.pt
+*.pkl
+*.db

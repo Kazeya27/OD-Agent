@@ -10,12 +10,12 @@ from typing import List, Optional, Any, Dict
 import requests
 from dotenv import load_dotenv
 
-from langchain.agents import AgentExecutor, create_tool_calling_agent
+from pydantic import BaseModel, Field
+
+from langchain.agents import create_agent
 from langchain.tools import tool
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.chat_history import BaseChatMessageHistory
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_core.runnables.history import RunnableWithMessageHistory
 
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -287,14 +287,8 @@ SYSTEM = (
     "5) 输出时给出关键数值与简明解释。"
 )
 
-PROMPT = ChatPromptTemplate.from_messages(
-    [
-        ("system", SYSTEM),
-        MessagesPlaceholder("chat_history"),
-        ("human", "{input}"),
-        MessagesPlaceholder("agent_scratchpad"),
-    ]
-)
+# 注意：LangChain 1.0.0 不再使用 ChatPromptTemplate
+# create_agent 直接通过 system_prompt 参数接收系统提示词
 
 # ------------------ 日志 ------------------
 
@@ -326,10 +320,10 @@ def main():
 
     llm = get_llm(args.provider, args.model_name, temperature=args.temperature)
 
-    agent = create_tool_calling_agent(llm, TOOLS, PROMPT)
-    executor = AgentExecutor(agent=agent, tools=TOOLS, verbose=True)
+    # LangChain 1.0.0 使用新的 create_agent
+    agent_executor = create_agent(llm, TOOLS, system_prompt=SYSTEM)
     agent_with_history = RunnableWithMessageHistory(
-        executor, get_session_history, input_messages_key="input", history_messages_key="chat_history"
+        agent_executor, get_session_history, input_messages_key="messages", history_messages_key="chat_history"
     )
 
     logs: List[str] = []
@@ -338,8 +332,10 @@ def main():
     try:
         question = input("Q: ").strip()
         while question:
-            resp = agent_with_history.invoke({"input": question}, config=cfg)
-            output = resp["output"]
+            # LangGraph agent 使用 messages 格式
+            resp = agent_with_history.invoke({"messages": [("user", question)]}, config=cfg)
+            # 获取最后一条消息作为输出
+            output = resp["messages"][-1].content if resp.get("messages") else str(resp)
             print("\nA:", output, "\n")
             logs += [f"user: {question}", "-" * 40, f"AI: {output}", "-" * 40]
             question = input("Q: ").strip()

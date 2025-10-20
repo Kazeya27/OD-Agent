@@ -1,0 +1,13 @@
+# Web 框架
+fastapi
+uvicorn[standard]
+
+# 数据验证（Pydantic v2）
+pydantic>=2.0.0
+
+# 其他依赖
+requests
+python-dotenv
+pandas
+tqdm
+
