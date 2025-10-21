@@ -11,3 +11,6 @@ python-dotenv
 pandas
 tqdm
 
+# 测试依赖
+httpx  # FastAPI TestClient 需要
+
