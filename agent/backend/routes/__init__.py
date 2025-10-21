@@ -5,7 +5,7 @@ API Routes
 """
 
 from fastapi import APIRouter
-from . import geo, od, relations, analysis, metrics
+from . import geo, od, relations, analysis, metrics, predict
 
 # Create main router
 api_router = APIRouter()
@@ -14,6 +14,6 @@ api_router = APIRouter()
 api_router.include_router(geo.router, tags=["Geo"])
 api_router.include_router(relations.router, tags=["Relations"])
 api_router.include_router(od.router, tags=["OD"])
+api_router.include_router(predict.router, tags=["Prediction"])
 api_router.include_router(metrics.router, tags=["Metrics"])
 api_router.include_router(analysis.router, tags=["Analysis"])
-
