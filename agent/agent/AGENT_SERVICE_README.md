@@ -26,10 +26,10 @@ LLM_MODEL=gemini-2.5-flash-preview-05-20
 LLM_TEMPERATURE=0.6
 
 # 后端服务地址
-BASE_URL=http://127.0.0.1:8000
+BASE_URL=http://127.0.0.1:8502
 
 # Agent 服务端口
-AGENT_PORT=8001
+AGENT_PORT=8503
 
 # Google API Key (for Gemini)
 GOOGLE_API_KEY=your_api_key_here
@@ -42,7 +42,7 @@ cd agent/agent
 python agent_service.py
 ```
 
-服务将在 `http://0.0.0.0:8001` 启动。
+服务将在 `http://0.0.0.0:8503` 启动。
 
 ## API 接口
 
@@ -84,7 +84,7 @@ python agent_service.py
 
 **cURL 示例：**
 ```bash
-curl -X POST "http://localhost:8001/chat" \
+curl -X POST "http://localhost:8503/chat" \
   -H "Content-Type: application/json" \
   -d \'{"session_id": "user-123", "question": "你好"}\'  
 ```
@@ -133,7 +133,7 @@ curl -X POST "http://localhost:8001/chat" \
 
 **cURL 示例：**
 ```bash
-curl -X POST "http://localhost:8001/history" \
+curl -X POST "http://localhost:8503/history" \
   -H "Content-Type: application/json" \
   -d \'{"session_id": "user-123"}\'  
 ```
@@ -182,7 +182,7 @@ curl -X POST "http://localhost:8001/history" \
 import requests
 
 # 基础 URL
-BASE_URL = "http://localhost:8001"
+BASE_URL = "http://localhost:8503"
 
 # 发送聊天消息
 def chat(session_id: str, question: str):
@@ -218,7 +218,7 @@ if __name__ == "__main__":
 ### JavaScript/TypeScript 客户端
 
 ```javascript
-const BASE_URL = "http://localhost:8001";
+const BASE_URL = "http://localhost:8503";
 
 // 发送聊天消息
 async function chat(sessionId, question) {
@@ -270,7 +270,7 @@ async function getHistory(sessionId) {
 
 ## 注意事项
 
-1. **后端服务依赖**：Agent 服务依赖后端 API 服务 (默认 `http://127.0.0.1:8000`)，请确保后端服务已启动。
+1. **后端服务依赖**：Agent 服务依赖后端 API 服务 (默认 `http://127.0.0.1:8502`)，请确保后端服务已启动。
 
 2. **API Key**：使用 Gemini 需要配置 `GOOGLE_API_KEY` 环境变量。
 

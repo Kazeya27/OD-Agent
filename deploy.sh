@@ -113,7 +113,7 @@ check_services() {
     sleep 10  # 等待服务启动
     
     # 检查各服务健康状态
-    services=("backend:8000" "agent:8001" "frontend:8501")
+    services=("backend:8502" "agent:8503" "frontend:8501")
     
     for service in "${services[@]}"; do
         name=$(echo $service | cut -d: -f1)
@@ -133,8 +133,8 @@ show_access_info() {
     echo ""
     print_info "服务访问地址："
     echo "  🌐 Frontend (Web界面): http://localhost:8501"
-    echo "  🔧 Backend API: http://localhost:8000"
-    echo "  🤖 Agent API: http://localhost:8001"
+    echo "  🔧 Backend API: http://localhost:8502"
+    echo "  🤖 Agent API: http://localhost:8503"
     echo ""
     print_info "管理命令："
     echo "  查看服务状态: docker-compose ps"

@@ -24,6 +24,7 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 
 # Import from od_agent
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parent))
 from tools import TOOLS, set_base_url as set_backend_url
 from od_agent import SYSTEM_PROMPT, get_llm
@@ -49,8 +50,13 @@ _HISTORY_LOCK = Lock()
 
 class ChatMessage(BaseModel):
     """Single chat message entry."""
+
     time: str = Field(..., description="ISO8601 timestamp")
-    from_: str = Field(..., alias="from", description="Message source: user|assistant|function_call|function_response")
+    from_: str = Field(
+        ...,
+        alias="from",
+        description="Message source: user|assistant|function_call|function_response",
+    )
     content: str = Field(..., description="Message content")
 
     class Config:
@@ -77,17 +83,17 @@ def _load_session_from_file(session_id: str) -> None:
     file_path = _get_session_file_path(session_id)
     if not file_path.exists():
         return
-    
+
     try:
         with open(file_path, "r", encoding="utf-8") as f:
             messages = json.load(f)
-        
+
         # Reconstruct chat history from messages
         history = _STORE[session_id]
         for msg in messages:
             from_type = msg.get("from")
             content = msg.get("content", "")
-            
+
             if from_type == "user":
                 history.add_user_message(content)
             elif from_type == "assistant":
@@ -100,13 +106,13 @@ def _load_session_from_file(session_id: str) -> None:
 def save_message_to_history(session_id: str, from_type: str, content: str) -> None:
     """Save a single message to session history file."""
     file_path = _get_session_file_path(session_id)
-    
+
     message = {
         "time": datetime.now().isoformat(),
         "from": from_type,
-        "content": content
+        "content": content,
     }
-    
+
     with _HISTORY_LOCK:
         # Load existing messages
         messages = []
@@ -117,10 +123,10 @@ def save_message_to_history(session_id: str, from_type: str, content: str) -> No
             except Exception as e:
                 print(f"Error reading history file: {e}")
                 messages = []
-        
+
         # Append new message
         messages.append(message)
-        
+
         # Save back to file
         try:
             with open(file_path, "w", encoding="utf-8") as f:
@@ -132,10 +138,10 @@ def save_message_to_history(session_id: str, from_type: str, content: str) -> No
 def get_chat_history(session_id: str) -> List[ChatMessage]:
     """Get all chat messages for a session."""
     file_path = _get_session_file_path(session_id)
-    
+
     if not file_path.exists():
         return []
-    
+
     try:
         with open(file_path, "r", encoding="utf-8") as f:
             messages = json.load(f)
@@ -149,9 +155,12 @@ def get_chat_history(session_id: str) -> List[ChatMessage]:
 # Agent Builder
 # ---------------------------------------------------------------------------
 
-def build_agent(provider: str = "gemini", 
-                model_name: str = "gemini-2.5-flash-preview-05-20", 
-                temperature: float = 0.6) -> RunnableWithMessageHistory:
+
+def build_agent(
+    provider: str = "gemini",
+    model_name: str = "gemini-2.5-flash-preview-05-20",
+    temperature: float = 0.6,
+) -> RunnableWithMessageHistory:
     """Build the agent with specified configuration."""
     llm = get_llm(provider, model_name, temperature)
 
@@ -184,11 +193,7 @@ def build_agent(provider: str = "gemini",
 # FastAPI Application
 # ---------------------------------------------------------------------------
 
-app = FastAPI(
-    title="OD Agent Service",
-    version="1.0.0",
-    description="OD 智能问答服务"
-)
+app = FastAPI(title="OD Agent Service", version="1.0.0", description="OD 智能问答服务")
 
 # Global agent instance
 _AGENT: Optional[RunnableWithMessageHistory] = None
@@ -196,12 +201,14 @@ _AGENT: Optional[RunnableWithMessageHistory] = None
 
 class ChatRequest(BaseModel):
     """Request for chat endpoint."""
+
     session_id: str = Field(..., description="Session ID for conversation continuity")
     question: str = Field(..., description="User question")
 
 
 class ChatResponse(BaseModel):
     """Response from chat endpoint."""
+
     session_id: str
     answer: str
     timestamp: str
@@ -209,11 +216,13 @@ class ChatResponse(BaseModel):
 
 class HistoryRequest(BaseModel):
     """Request for getting chat history."""
+
     session_id: str = Field(..., description="Session ID")
 
 
 class HistoryResponse(BaseModel):
     """Response containing chat history."""
+
     session_id: str
     messages: List[ChatMessage]
 
@@ -222,88 +231,91 @@ class HistoryResponse(BaseModel):
 async def startup_event():
     """Initialize agent on startup."""
     global _AGENT
-    
+
     # Get configuration from environment
     provider = os.getenv("LLM_PROVIDER", "gemini")
     model_name = os.getenv("LLM_MODEL", "gemini-2.5-flash-preview-05-20")
     temperature = float(os.getenv("LLM_TEMPERATURE", "0.6"))
-    backend_url = os.getenv("BASE_URL", "http://127.0.0.1:8000")
-    
+    backend_url = os.getenv("BASE_URL", "http://127.0.0.1:8502")
+
     # Set backend URL
     if backend_url:
         set_backend_url(backend_url)
-    
+
     # Build agent
     _AGENT = build_agent(provider, model_name, temperature)
-    print(f"Agent initialized: provider={provider}, model={model_name}, temp={temperature}")
+    print(
+        f"Agent initialized: provider={provider}, model={model_name}, temp={temperature}"
+    )
 
 
 @app.get("/")
 async def root():
     """Health check."""
-    return {
-        "ok": True,
-        "service": "OD Agent Service",
-        "version": "1.0.0"
-    }
+    return {"ok": True, "service": "OD Agent Service", "version": "1.0.0"}
 
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     """
     Chat with the agent.
-    
+
     Args:
         request: ChatRequest containing session_id and question
-    
+
     Returns:
         ChatResponse with agent\'s answer
     """
     if _AGENT is None:
         raise HTTPException(status_code=500, detail="Agent not initialized")
-    
+
     session_id = request.session_id
     question = request.question.strip()
-    
+
     if not question:
         raise HTTPException(status_code=400, detail="Question cannot be empty")
-    
+
     # Save user message
     save_message_to_history(session_id, "user", question)
-    
+
     try:
         # Invoke agent
         config = {"configurable": {"session_id": session_id}}
         response = _AGENT.invoke({"input": question}, config=config)
-        
+
         # Extract answer
         answer = response.get("output", str(response))
-        
+
         # Log intermediate steps (function calls)
         intermediate_steps = response.get("intermediate_steps", [])
         for step in intermediate_steps:
             if len(step) >= 2:
                 action, observation = step[0], step[1]
-                
+
                 # Log function call
-                function_call_content = json.dumps({
-                    "tool": action.tool,
-                    "tool_input": action.tool_input,
-                }, ensure_ascii=False)
-                save_message_to_history(session_id, "function_call", function_call_content)
-                
+                function_call_content = json.dumps(
+                    {
+                        "tool": action.tool,
+                        "tool_input": action.tool_input,
+                    },
+                    ensure_ascii=False,
+                )
+                save_message_to_history(
+                    session_id, "function_call", function_call_content
+                )
+
                 # Log function response
-                save_message_to_history(session_id, "function_response", str(observation))
-        
+                save_message_to_history(
+                    session_id, "function_response", str(observation)
+                )
+
         # Save assistant message
         save_message_to_history(session_id, "assistant", answer)
-        
+
         return ChatResponse(
-            session_id=session_id,
-            answer=answer,
-            timestamp=datetime.now().isoformat()
+            session_id=session_id, answer=answer, timestamp=datetime.now().isoformat()
         )
-        
+
     except Exception as e:
         error_msg = f"Agent error: {str(e)}"
         save_message_to_history(session_id, "assistant", error_msg)
@@ -314,24 +326,21 @@ async def chat(request: ChatRequest):
 async def get_history(request: HistoryRequest):
     """
     Get chat history for a session.
-    
+
     Args:
         request: HistoryRequest containing session_id
-    
+
     Returns:
         HistoryResponse with all messages in the session
     """
     session_id = request.session_id
     messages = get_chat_history(session_id)
-    
-    return HistoryResponse(
-        session_id=session_id,
-        messages=messages
-    )
+
+    return HistoryResponse(session_id=session_id, messages=messages)
 
 
 if __name__ == "__main__":
     import uvicorn
-    
-    port = int(os.getenv("AGENT_PORT", "8001"))
+
+    port = int(os.getenv("AGENT_PORT", "8503"))
     uvicorn.run(app, host="127.0.0.1", port=port)

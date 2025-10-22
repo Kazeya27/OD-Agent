@@ -112,7 +112,7 @@ deploy_services() {
 wait_for_services() {
     print_info "等待服务就绪..."
     
-    services=("backend:8000" "agent:8001" "frontend:8501")
+    services=("backend:8502" "agent:8503" "frontend:8501")
     max_attempts=30
     
     for service in "${services[@]}"; do

@@ -4,7 +4,7 @@
 
 本文档描述了 OD-Agent 系统中的人员流动分析相关接口，包括省级和城市级的流动强度分析、省际和城市间通道分析等功能。
 
-**基础 URL**: `http://localhost:8000` (默认)
+**基础 URL**: `http://localhost:8502` (默认)
 
 **Content-Type**: `application/json`
 
@@ -75,7 +75,7 @@
 **示例 1: 查询2025春运期间各省流出总量排名**
 
 ```bash
-curl -X POST "http://localhost:8000/analyze/province-flow" \
+curl -X POST "http://localhost:8502/analyze/province-flow" \
   -H "Content-Type: application/json" \
   -d '{
     "period_type": "2025_spring_festival",
@@ -89,7 +89,7 @@ curl -X POST "http://localhost:8000/analyze/province-flow" \
 **示例 2: 查询日常每日各省流入量**
 
 ```bash
-curl -X POST "http://localhost:8000/analyze/province-flow" \
+curl -X POST "http://localhost:8502/analyze/province-flow" \
   -H "Content-Type: application/json" \
   -d '{
     "period_type": "daily",
@@ -151,7 +151,7 @@ curl -X POST "http://localhost:8000/analyze/province-flow" \
 #### 调用示例
 
 ```bash
-curl -X POST "http://localhost:8000/analyze/city-flow" \
+curl -X POST "http://localhost:8502/analyze/city-flow" \
   -H "Content-Type: application/json" \
   -d '{
     "period_type": "2025_spring_festival",
@@ -213,7 +213,7 @@ curl -X POST "http://localhost:8000/analyze/city-flow" \
 #### 调用示例
 
 ```bash
-curl -X POST "http://localhost:8000/analyze/province-corridor" \
+curl -X POST "http://localhost:8502/analyze/province-corridor" \
   -H "Content-Type: application/json" \
   -d '{
     "period_type": "2025_spring_festival",
@@ -286,7 +286,7 @@ curl -X POST "http://localhost:8000/analyze/province-corridor" \
 #### 调用示例
 
 ```bash
-curl -X POST "http://localhost:8000/analyze/city-corridor" \
+curl -X POST "http://localhost:8502/analyze/city-corridor" \
   -H "Content-Type: application/json" \
   -d '{
     "period_type": "2025_spring_festival",
@@ -354,7 +354,7 @@ import requests
 import json
 
 # 基础配置
-BASE_URL = "http://localhost:8000"
+BASE_URL = "http://localhost:8502"
 
 # 调用示例
 def analyze_province_flow(period_type, start, end, **kwargs):
@@ -508,7 +508,7 @@ from datetime import datetime
 class AnalysisAPIClient:
     """分析API客户端"""
     
-    def __init__(self, base_url: str = "http://localhost:8000"):
+    def __init__(self, base_url: str = "http://localhost:8502"):
         self.base_url = base_url.rstrip('/')
     
     def province_flow(

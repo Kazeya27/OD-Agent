@@ -3,8 +3,8 @@
 ## 概述
 
 本项目包含三个主要服务：
-- **Backend**: FastAPI 后端服务 (端口 8000)
-- **Agent**: 智能代理服务 (端口 8001) 
+- **Backend**: FastAPI 后端服务 (端口 8502)
+- **Agent**: 智能代理服务 (端口 8503) 
 - **Frontend**: Streamlit 前端界面 (端口 8501)
 
 ## 快速部署
@@ -52,8 +52,8 @@ LLM_PROVIDER=gemini
 GOOGLE_API_KEY=your_google_api_key_here
 
 # 服务端口（可选，使用默认值）
-BACKEND_PORT=8000
-AGENT_PORT=8001
+BACKEND_PORT=8502
+AGENT_PORT=8503
 FRONTEND_PORT=8501
 ```
 
@@ -68,8 +68,8 @@ FRONTEND_PORT=8501
 部署完成后，可以通过以下地址访问服务：
 
 - **前端界面**: http://localhost:8501
-- **后端API**: http://localhost:8000
-- **代理API**: http://localhost:8001
+- **后端API**: http://localhost:8502
+- **代理API**: http://localhost:8503
 
 ## 管理命令
 
@@ -129,8 +129,8 @@ docker-compose build --no-cache backend
 2. **端口冲突**
    ```bash
    # 检查端口占用
-   netstat -tulpn | grep :8000
-   netstat -tulpn | grep :8001
+   netstat -tulpn | grep :8502
+   netstat -tulpn | grep :8503
    netstat -tulpn | grep :8501
    ```
 
@@ -141,7 +141,7 @@ docker-compose build --no-cache backend
 4. **服务间通信问题**
    ```bash
    # 检查网络连接
-   docker-compose exec backend curl http://agent:8001/
+   docker-compose exec backend curl http://agent:8503/
    ```
 
 ### 清理和重置
@@ -178,8 +178,8 @@ docker stack deploy -c docker-compose.yml od-agent
 ### 健康检查
 
 各服务都配置了健康检查：
-- Backend: `http://localhost:8000/`
-- Agent: `http://localhost:8001/`
+- Backend: `http://localhost:8502/`
+- Agent: `http://localhost:8503/`
 - Frontend: `http://localhost:8501/`
 
 ### 日志管理

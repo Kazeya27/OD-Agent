@@ -11,7 +11,7 @@ pip install -r requirements.txt
 python -m uvicorn app:app --reload
 
 # 访问 API 文档
-# http://localhost:8000/docs
+# http://localhost:8502/docs
 ```
 
 ## 📁 项目结构
@@ -137,7 +137,7 @@ python test/test_analysis_functions.py
 ## 📞 支持
 
 如有问题，请查看：
-1. API 文档: http://localhost:8000/docs
+1. API 文档: http://localhost:8502/docs
 2. 重构说明: [REFACTORING.md](../../REFACTORING.md)
 3. 测试脚本: `test_refactored_app.py`
 

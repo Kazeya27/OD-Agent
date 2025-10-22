@@ -8,7 +8,7 @@ services:
       dockerfile: Dockerfile
     container_name: od-backend
     ports:
-      - "8000:8000"
+      - "8502:8502"
     volumes:
       - ./agent/backend/data:/app/data
       - ./agent/backend/geo_points.db:/app/geo_points.db
@@ -18,7 +18,7 @@ services:
       - od-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      test: ["CMD", "curl", "-f", "http://localhost:8502/"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -30,17 +30,17 @@ services:
       dockerfile: Dockerfile
     container_name: od-agent
     ports:
-      - "8001:8001"
+      - "8503:8503"
     volumes:
       - ./agent/agent/chat_history:/app/chat_history
       - ./agent/agent/logs:/app/logs
     environment:
       - PYTHONPATH=/app
-      - BASE_URL=http://backend:8000
+      - BASE_URL=http://backend:8502
       - LLM_PROVIDER=${LLM_PROVIDER:-gemini}
       - LLM_MODEL=${LLM_MODEL:-gemini-2.5-flash-preview-05-20}
       - LLM_TEMPERATURE=${LLM_TEMPERATURE:-0.6}
-      - AGENT_PORT=8001
+      - AGENT_PORT=8503
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
     depends_on:
       - backend
@@ -48,7 +48,7 @@ services:
       - od-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8001/"]
+      test: ["CMD", "curl", "-f", "http://localhost:8503/"]
       interval: 30s
       timeout: 10s
       retries: 3

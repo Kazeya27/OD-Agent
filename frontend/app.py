@@ -20,7 +20,7 @@ def mermaid_chat(code: str) -> str:
 
 
 # Agent服务配置
-AGENT_SERVICE_URL = "http://127.0.0.1:8001"  # Agent服务地址
+AGENT_SERVICE_URL = "http://127.0.0.1:8503"  # Agent服务地址
 DEFAULT_SESSION_ID = "streamlit-session"
 
 

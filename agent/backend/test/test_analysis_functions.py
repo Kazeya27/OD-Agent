@@ -343,7 +343,7 @@ def main():
     print("\n提示:")
     print("  1. 确保已安装所有依赖: pip install -r requirements.txt")
     print("  2. 使用 python -m uvicorn app:app --reload 启动 API 服务")
-    print("  3. 访问 http://localhost:8000/docs 查看 API 文档")
+    print("  3. 访问 http://localhost:8502/docs 查看 API 文档")
 
 
 if __name__ == "__main__":

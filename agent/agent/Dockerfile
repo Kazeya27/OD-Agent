@@ -22,7 +22,7 @@ COPY . .
 RUN mkdir -p /app/chat_history /app/logs
 
 # 暴露端口
-EXPOSE 8001
+EXPOSE 8503
 
 # 启动命令
 CMD ["python", "agent_service.py"]

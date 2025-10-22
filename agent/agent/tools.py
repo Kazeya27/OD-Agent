@@ -22,7 +22,7 @@ _HERE = Path(__file__).resolve().parent
 load_dotenv(_HERE / ".env")
 load_dotenv(_HERE.parent / "backend" / ".env")
 
-_BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+_BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:8502").rstrip("/")
 _SESSION = requests.Session()
 
 
@@ -72,7 +72,7 @@ class GeoIdArgs(BaseModel):
 
 class RelationsMatrixArgs(BaseModel):
     fill: Optional[str] = Field(
-        default="nan", description="缺失值填充值：\'nan\' 或 \'0\' 等字符串"
+        default="nan", description="缺失值填充值：'nan' 或 '0' 等字符串"
     )
 
 
@@ -80,7 +80,7 @@ class ODTensorArgs(BaseModel):
     start: str = Field(..., description="起始时间 ISO8601，如 2022-01-11T00:00:00Z")
     end: str = Field(..., description="结束时间 ISO8601（半开区间）")
     geo_ids: Optional[str] = Field(
-        ..., description="获取指定geo_ids间的OD（逗号分隔，如 \'1,2,3\'）"
+        ..., description="获取指定geo_ids间的OD（逗号分隔，如 '1,2,3'）"
     )
     flow_policy: Optional[str] = Field(
         default="zero", description="缺失策略：zero|null|skip"
@@ -101,7 +101,7 @@ class PredictArgs(BaseModel):
     start: str = Field(..., description="起始时间 ISO8601，如 2022-01-11T00:00:00Z")
     end: str = Field(..., description="结束时间 ISO8601（半开区间）")
     geo_ids: Optional[str] = Field(
-        ..., description="仅获取指定geo_ids间的OD（逗号分隔，如 \'1,2,3\'）"
+        ..., description="仅获取指定geo_ids间的OD（逗号分隔，如 '1,2,3'）"
     )
     flow_policy: Optional[str] = Field(
         default="zero", description="缺失策略：zero|null|skip"
@@ -130,7 +130,7 @@ class MetricsArgs(BaseModel):
 
 
 class ProvinceFlowArgs(BaseModel):
-    period_type: str = Field(..., description="时期类型，例如 \'chunyun\'")
+    period_type: str = Field(..., description="时期类型，例如 'chunyun'")
     start: str = Field(..., description="起始时间 ISO8601")
     end: str = Field(..., description="结束时间 ISO8601")
     date_mode: str = Field(default="daily", description="时间维度：daily|total")
@@ -138,7 +138,7 @@ class ProvinceFlowArgs(BaseModel):
 
 
 class CityFlowArgs(BaseModel):
-    period_type: str = Field(..., description="时期类型，例如 \'chunyun\'")
+    period_type: str = Field(..., description="时期类型，例如 'chunyun'")
     start: str = Field(..., description="起始时间 ISO8601")
     end: str = Field(..., description="结束时间 ISO8601")
     date_mode: str = Field(default="daily", description="时间维度：daily|total")
@@ -146,7 +146,7 @@ class CityFlowArgs(BaseModel):
 
 
 class ProvinceCorridorArgs(BaseModel):
-    period_type: str = Field(..., description="时期类型，例如 \'chunyun\'")
+    period_type: str = Field(..., description="时期类型，例如 'chunyun'")
     start: str = Field(..., description="起始时间 ISO8601")
     end: str = Field(..., description="结束时间 ISO8601")
     date_mode: str = Field(default="total", description="时间维度，推荐total")
@@ -154,7 +154,7 @@ class ProvinceCorridorArgs(BaseModel):
 
 
 class CityCorridorArgs(BaseModel):
-    period_type: str = Field(..., description="时期类型，例如 \'chunyun\'")
+    period_type: str = Field(..., description="时期类型，例如 'chunyun'")
     start: str = Field(..., description="起始时间 ISO8601")
     end: str = Field(..., description="结束时间 ISO8601")
     date_mode: str = Field(default="total", description="时间维度，推荐total")
@@ -378,6 +378,7 @@ def _make_tool_error_handler(tool_name: str):
             f"工具 `{tool_name}` 调用失败: {error}. "
             "请根据错误提示检查参数或选择其他工具重试。"
         )
+
     return _handler
 
 

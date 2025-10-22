@@ -57,8 +57,8 @@ OD-Agent/
 ## 🔧 服务配置
 
 ### 开发环境 (docker-compose.yml)
-- **Backend**: 端口 8000
-- **Agent**: 端口 8001  
+- **Backend**: 端口 8502
+- **Agent**: 端口 8503  
 - **Frontend**: 端口 8501
 - 使用本地卷挂载数据
 
@@ -82,8 +82,8 @@ GOOGLE_API_KEY=your_google_api_key_here
 ```bash
 LLM_MODEL=gemini-2.5-flash-preview-05-20
 LLM_TEMPERATURE=0.6
-BACKEND_PORT=8000
-AGENT_PORT=8001
+BACKEND_PORT=8502
+AGENT_PORT=8503
 FRONTEND_PORT=8501
 ```
 
@@ -91,8 +91,8 @@ FRONTEND_PORT=8501
 
 ### 开发环境
 - Frontend: http://localhost:8501
-- Backend API: http://localhost:8000
-- Agent API: http://localhost:8001
+- Backend API: http://localhost:8502
+- Agent API: http://localhost:8503
 
 ### 生产环境（带Nginx）
 - 主站点: http://localhost
