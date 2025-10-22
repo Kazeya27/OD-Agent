@@ -1,0 +1,21 @@
+settings:
+  logging:
+    log_level: "ERROR"
+
+  caching:
+    enabled: false
+
+servers:
+  qwen2.5-72b-instruct:
+    provider: custom
+    base_url: os.environ/ACT_BASE_URL
+    api_key: os.environ/ACT_API_KEY
+    model: qwen2.5-72b-instruct
+    temperature: 0.01
+
+  qwen2.5-coder-32b-instruct:
+    provider: custom
+    base_url: os.environ/ACT_BASE_URL
+    api_key: os.environ/ACT_API_KEY
+    model: qwen2.5-coder-32b-instruct
+    temperature: 0.01
