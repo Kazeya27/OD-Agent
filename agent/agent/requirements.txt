@@ -3,10 +3,10 @@ fastapi
 uvicorn[standard]
 
 # LangChain dependencies
-langchain==0.3.27
-langchain-community==0.3.31
-langchain-core==0.3.79
-langchain-google-genai==2.1.12
+langchain
+langchain-community=
+langchain-core
+langchain-google-genai
 
 # Qwen dependencies
 dashscope
