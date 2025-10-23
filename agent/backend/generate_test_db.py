@@ -153,7 +153,7 @@ dyna_id = 0
 # 生成2024年1月的数据（30天）
 start_date = datetime(2025, 1, 1)
 
-for day in range(365):
+for day in range(700):
     current_date = start_date + timedelta(days=day)
     time_str = current_date.strftime("%Y-%m-%dT00:00:00Z")
 
