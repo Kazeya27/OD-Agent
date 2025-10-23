@@ -12,7 +12,7 @@
 ## 安装依赖
 
 ```bash
-pip install fastapi uvicorn langchain langchain-community langchain-google-genai python-dotenv pydantic requests
+pip install fastapi uvicorn langchain==0.3.27 langchain-community==0.3.31 langchain-google-genai==2.1.12 python-dotenv pydantic requests
 ```
 
 ## 配置

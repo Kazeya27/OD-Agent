@@ -1,0 +1,138 @@
+version: '3.8'
+
+services:
+  # Backend API服务
+  backend:
+    build:
+      context: ./agent/backend
+      dockerfile: Dockerfile
+    container_name: od-backend-prod
+    ports:
+      - "8000:8000"
+    volumes:
+      - backend-data:/app/data
+      - ./agent/backend/geo_points.db:/app/geo_points.db
+    environment:
+      - PYTHONPATH=/app
+      - LOG_LEVEL=INFO
+    networks:
+      - od-network
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  # Agent服务
+  agent:
+    build:
+      context: ./agent/agent
+      dockerfile: Dockerfile
+    container_name: od-agent-prod
+    ports:
+      - "8001:8001"
+    volumes:
+      - agent-chat-history:/app/chat_history
+      - agent-logs:/app/logs
+    environment:
+      - PYTHONPATH=/app
+      - BASE_URL=http://backend:8000
+      - LLM_PROVIDER=${LLM_PROVIDER:-gemini}
+      - LLM_MODEL=${LLM_MODEL:-gemini-2.5-flash-preview-05-20}
+      - LLM_TEMPERATURE=${LLM_TEMPERATURE:-0.6}
+      - AGENT_PORT=8001
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - LOG_LEVEL=INFO
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - od-network
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+
+  # Frontend服务
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: od-frontend-prod
+    ports:
+      - "8501:8501"
+    volumes:
+      - frontend-logs:/app/logs
+      - frontend-dumps:/app/dumps
+    environment:
+      - PYTHONPATH=/app
+      - LOG_LEVEL=INFO
+    depends_on:
+      agent:
+        condition: service_healthy
+    networks:
+      - od-network
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # Nginx反向代理（可选）
+  nginx:
+    image: nginx:alpine
+    container_name: od-nginx-prod
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - frontend
+      - backend
+      - agent
+    networks:
+      - od-network
+    restart: always
+
+networks:
+  od-network:
+    driver: bridge
+
+volumes:
+  backend-data:
+    driver: local
+  agent-chat-history:
+    driver: local
+  agent-logs:
+    driver: local
+  frontend-logs:
+    driver: local
+  frontend-dumps:
+    driver: local
