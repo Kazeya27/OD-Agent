@@ -16,6 +16,8 @@ from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
+
+
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.chat_models import ChatTongyi
 
@@ -38,8 +40,6 @@ load_dotenv(_HERE.parent / "backend" / ".env")
 def get_llm(provider: str, model_name: str, temperature: float = 0.0):
     """Get LLM instance based on provider."""
     if provider == "gemini":
-        if ChatGoogleGenerativeAI is None:
-            raise RuntimeError("未安装 langchain_google_genai，无法使用 Gemini")
         return ChatGoogleGenerativeAI(
             model=model_name,
             temperature=temperature,
@@ -154,6 +154,7 @@ def main() -> None:
         choices=["gemini", "qwen"],
         help="LLM 服务提供商",
     )
+
     parser.add_argument(
         "--model_name",
         default="gemini-2.5-flash-preview-05-20",
@@ -165,6 +166,13 @@ def main() -> None:
         "--session", type=str, default="default-session", help="会话 ID"
     )
     args = parser.parse_args()
+
+    # 设置默认模型名称
+    if args.model_name is None:
+        if args.provider == "gemini":
+            args.model_name = "gemini-2.5-flash-preview-05-20"
+        elif args.provider == "qwen":
+            args.model_name = "qwen-turbo"
 
     if args.base_url:
         set_base_url(args.base_url)
