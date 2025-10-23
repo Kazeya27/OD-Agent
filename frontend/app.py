@@ -12,6 +12,7 @@ from typing import Generator
 import streamlit as st
 
 from examples import examples
+from chat_storage import ChatStorage
 
 
 def mermaid_chat(code: str) -> str:
@@ -22,6 +23,9 @@ def mermaid_chat(code: str) -> str:
 # Agent服务配置
 AGENT_SERVICE_URL = "http://127.0.0.1:8503"  # Agent服务地址
 DEFAULT_SESSION_ID = "streamlit-session"
+
+# 初始化聊天存储
+chat_storage = ChatStorage()
 
 
 def call_agent_service(question: str, session_id: str = DEFAULT_SESSION_ID) -> str:
@@ -80,14 +84,21 @@ st.title("全社会跨区域人员流动量预测智能体")
 
 # 初始化聊天历史
 if "messages" not in st.session_state:
-    st.session_state.messages = []
-    # 添加初始AI欢迎消息
-    st.session_state.messages.append(
-        {
-            "role": "ai",
-            "content": "我是跨区域人员流动量预测助手，可以帮助您分析出行流量、预测拥堵情况、解释模型结果。",
-        }
-    )
+    # 尝试从本地加载聊天记录
+    saved_messages = chat_storage.load_chat(DEFAULT_SESSION_ID)
+    if saved_messages:
+        st.session_state.messages = saved_messages
+    else:
+        st.session_state.messages = []
+        # 添加初始AI欢迎消息
+        st.session_state.messages.append(
+            {
+                "role": "ai",
+                "content": "我是跨区域人员流动量预测助手，可以帮助您分析出行流量、预测拥堵情况、解释模型结果。",
+            }
+        )
+        # 保存初始消息
+        chat_storage.save_chat(DEFAULT_SESSION_ID, st.session_state.messages)
 
 # 侧边栏
 with st.sidebar:
@@ -96,7 +107,48 @@ with st.sidebar:
     if st.button("🗑️ 清空聊天记录", use_container_width=True, type="secondary"):
         st.session_state.messages = []
         st.session_state.example_question = None
+        # 清空本地存储
+        chat_storage.delete_session(DEFAULT_SESSION_ID)
         st.rerun()
+
+    st.divider()
+
+    # 聊天记录管理
+    st.subheader("💾 聊天记录管理")
+
+    # 显示当前会话信息
+    message_count = len(st.session_state.messages)
+    st.info(f"当前会话消息数: {message_count}")
+
+    # 获取所有会话
+    all_sessions = chat_storage.get_all_sessions()
+    if all_sessions:
+        st.write("历史会话:")
+        for session in all_sessions[:5]:  # 只显示最近5个会话
+            session_id = session["session_id"]
+            message_count = session["message_count"]
+            updated_at = session.get("updated_at", "")
+            if updated_at:
+                try:
+                    from datetime import datetime
+
+                    dt = datetime.fromisoformat(updated_at)
+                    time_str = dt.strftime("%m-%d %H:%M")
+                except:
+                    time_str = updated_at[:16]
+            else:
+                time_str = "未知时间"
+
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                st.write(f"📝 {message_count}条消息 ({time_str})")
+            with col2:
+                if st.button("🗑️", key=f"del_{session_id}", help="删除此会话"):
+                    if chat_storage.delete_session(session_id):
+                        st.success("会话已删除")
+                        st.rerun()
+                    else:
+                        st.error("删除失败")
 
     st.divider()
 
@@ -129,6 +181,8 @@ for message in st.session_state.messages:
 if user_question:
     # 添加用户消息到历史
     st.session_state.messages.append({"role": "user", "content": user_question})
+    # 保存用户消息到本地
+    chat_storage.save_chat(DEFAULT_SESSION_ID, st.session_state.messages)
 
     # 显示用户消息
     with st.chat_message(name="user"):
@@ -143,3 +197,5 @@ if user_question:
 
         # 添加AI回答到历史
         st.session_state.messages.append({"role": "ai", "content": answer})
+        # 保存AI回答到本地
+        chat_storage.save_chat(DEFAULT_SESSION_ID, st.session_state.messages)

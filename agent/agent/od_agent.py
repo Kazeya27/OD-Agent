@@ -17,6 +17,7 @@ from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_community.chat_models import ChatTongyi
 
 # Import tools from tools module
 from tools import TOOLS, set_base_url
@@ -43,6 +44,13 @@ def get_llm(provider: str, model_name: str, temperature: float = 0.0):
             model=model_name,
             temperature=temperature,
             convert_system_message_to_human=True,
+        )
+    elif provider == "qwen":
+        if ChatTongyi is None:
+            raise RuntimeError("未安装 langchain_community，无法使用 Qwen")
+        return ChatTongyi(
+            model_name=model_name,
+            temperature=temperature,
         )
     raise ValueError(f"不支持的 provider: {provider}")
 
@@ -141,16 +149,21 @@ def main() -> None:
     """CLI entry point."""
     parser = argparse.ArgumentParser(description="OD Agent CLI")
     parser.add_argument(
-        "--provider", default="gemini", choices=["gemini"], help="LLM 服务提供商"
+        "--provider",
+        default="gemini",
+        choices=["gemini", "qwen"],
+        help="LLM 服务提供商",
     )
     parser.add_argument(
         "--model_name",
         default="gemini-2.5-flash-preview-05-20",
-        help="LLM 模型名称",
+        help="LLM 模型名称 (Gemini: gemini-2.5-flash-preview-05-20, Qwen: qwen-plus 或 qwen-max)",
     )
     parser.add_argument("--temperature", type=float, default=0.6, help="采样温度")
     parser.add_argument("--base_url", type=str, default=None, help="后端服务地址")
-    parser.add_argument("--session", type=str, default="default-session", help="会话 ID")
+    parser.add_argument(
+        "--session", type=str, default="default-session", help="会话 ID"
+    )
     args = parser.parse_args()
 
     if args.base_url:
