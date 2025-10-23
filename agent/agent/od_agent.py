@@ -16,7 +16,11 @@ from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
+
+
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
+
 
 # Import tools from tools module
 from tools import TOOLS, set_base_url
@@ -37,12 +41,26 @@ load_dotenv(_HERE.parent / "backend" / ".env")
 def get_llm(provider: str, model_name: str, temperature: float = 0.0):
     """Get LLM instance based on provider."""
     if provider == "gemini":
-        if ChatGoogleGenerativeAI is None:
-            raise RuntimeError("未安装 langchain_google_genai，无法使用 Gemini")
         return ChatGoogleGenerativeAI(
             model=model_name,
             temperature=temperature,
             convert_system_message_to_human=True,
+        )
+    elif provider == "qwen":
+        # Qwen 使用 OpenAI 兼容的 API
+        api_base = os.getenv("QWEN_API_BASE", "https://dashscope.aliyuncs.com/compatible-mode/v1")
+        api_key = os.getenv("QWEN_API_KEY") or os.getenv("DASHSCOPE_API_KEY")
+        
+        if not api_key:
+            raise RuntimeError(
+                "未设置 QWEN_API_KEY 或 DASHSCOPE_API_KEY 环境变量"
+            )
+        
+        return ChatOpenAI(
+            model=model_name,
+            temperature=temperature,
+            openai_api_base=api_base,
+            openai_api_key=api_key,
         )
     raise ValueError(f"不支持的 provider: {provider}")
 
@@ -141,17 +159,28 @@ def main() -> None:
     """CLI entry point."""
     parser = argparse.ArgumentParser(description="OD Agent CLI")
     parser.add_argument(
-        "--provider", default="gemini", choices=["gemini"], help="LLM 服务提供商"
+        "--provider", 
+        default="qwen", 
+        choices=["gemini", "qwen"], 
+        help="LLM 服务提供商 (gemini 或 qwen)"
     )
+    
     parser.add_argument(
         "--model_name",
-        default="gemini-2.5-flash-preview-05-20",
-        help="LLM 模型名称",
+        default=None,
+        help="LLM 模型名称 (Gemini: gemini-2.5-flash-preview-05-20, Qwen: qwen-turbo/qwen-plus/qwen-max)",
     )
     parser.add_argument("--temperature", type=float, default=0.6, help="采样温度")
     parser.add_argument("--base_url", type=str, default=None, help="后端服务地址")
     parser.add_argument("--session", type=str, default="default-session", help="会话 ID")
     args = parser.parse_args()
+
+    # 设置默认模型名称
+    if args.model_name is None:
+        if args.provider == "gemini":
+            args.model_name = "gemini-2.5-flash-preview-05-20"
+        elif args.provider == "qwen":
+            args.model_name = "qwen-turbo"
 
     if args.base_url:
         set_base_url(args.base_url)
