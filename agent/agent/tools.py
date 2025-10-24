@@ -130,7 +130,6 @@ class MetricsArgs(BaseModel):
 
 
 class ProvinceFlowArgs(BaseModel):
-    period_type: str = Field(..., description="时期类型，例如 'chunyun'")
     start: str = Field(..., description="起始时间 ISO8601")
     end: str = Field(..., description="结束时间 ISO8601")
     date_mode: str = Field(default="daily", description="时间维度：daily|total")
@@ -138,7 +137,6 @@ class ProvinceFlowArgs(BaseModel):
 
 
 class CityFlowArgs(BaseModel):
-    period_type: str = Field(..., description="时期类型，例如 'chunyun'")
     start: str = Field(..., description="起始时间 ISO8601")
     end: str = Field(..., description="结束时间 ISO8601")
     date_mode: str = Field(default="daily", description="时间维度：daily|total")
@@ -146,7 +144,6 @@ class CityFlowArgs(BaseModel):
 
 
 class ProvinceCorridorArgs(BaseModel):
-    period_type: str = Field(..., description="时期类型，例如 'chunyun'")
     start: str = Field(..., description="起始时间 ISO8601")
     end: str = Field(..., description="结束时间 ISO8601")
     date_mode: str = Field(default="total", description="时间维度，推荐total")
@@ -154,7 +151,6 @@ class ProvinceCorridorArgs(BaseModel):
 
 
 class CityCorridorArgs(BaseModel):
-    period_type: str = Field(..., description="时期类型，例如 'chunyun'")
     start: str = Field(..., description="起始时间 ISO8601")
     end: str = Field(..., description="结束时间 ISO8601")
     date_mode: str = Field(default="total", description="时间维度，推荐total")
@@ -272,7 +268,6 @@ def calc_metrics_tool(y_true: Any, y_pred: Any) -> str:
 
 @tool("analyze_province_flow", args_schema=ProvinceFlowArgs)
 def analyze_province_flow_tool(
-    period_type: str,
     start: str,
     end: str,
     date_mode: str = "daily",
@@ -280,7 +275,7 @@ def analyze_province_flow_tool(
 ) -> str:
     """分析省级人员流动强度，按序返回所有省份的OD流量"""
     payload: Dict[str, Any] = {
-        "period_type": period_type,
+        "period_type": "11",
         "start": start,
         "end": end,
         "date_mode": date_mode,
@@ -292,7 +287,6 @@ def analyze_province_flow_tool(
 
 @tool("analyze_city_flow", args_schema=CityFlowArgs)
 def analyze_city_flow_tool(
-    period_type: str,
     start: str,
     end: str,
     date_mode: str = "daily",
@@ -300,7 +294,7 @@ def analyze_city_flow_tool(
 ) -> str:
     """返回城市级人员流动强度，即按序返回所有城市的OD流量"""
     payload: Dict[str, Any] = {
-        "period_type": period_type,
+        "period_type": "period_type",
         "start": start,
         "end": end,
         "date_mode": date_mode,
@@ -312,7 +306,6 @@ def analyze_city_flow_tool(
 
 @tool("analyze_province_corridor", args_schema=ProvinceCorridorArgs)
 def analyze_province_corridor_tool(
-    period_type: str,
     start: str,
     end: str,
     date_mode: str = "total",
@@ -320,7 +313,7 @@ def analyze_province_corridor_tool(
 ) -> str:
     """返回指定时期内省际间的topk条人员流动通道"""
     payload: Dict[str, Any] = {
-        "period_type": period_type,
+        "period_type": "period_type",
         "start": start,
         "end": end,
         "date_mode": date_mode,
@@ -332,7 +325,6 @@ def analyze_province_corridor_tool(
 
 @tool("analyze_city_corridor", args_schema=CityCorridorArgs)
 def analyze_city_corridor_tool(
-    period_type: str,
     start: str,
     end: str,
     date_mode: str = "total",
@@ -341,7 +333,7 @@ def analyze_city_corridor_tool(
 ) -> str:
     """分析城市间TOP K条人员流动通道，分别返回省内和省际通道"""
     payload: Dict[str, Any] = {
-        "period_type": period_type,
+        "period_type": "period_type",
         "start": start,
         "end": end,
         "date_mode": date_mode,
