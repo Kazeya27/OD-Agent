@@ -5,14 +5,17 @@
 # @Description :
 import pathlib
 import requests
-import json
-import time
+import os
 from typing import Generator
+from dotenv import load_dotenv
 
 import streamlit as st
 
 from examples import examples
 from chat_storage import ChatStorage
+
+# 加载环境变量
+load_dotenv()
 
 
 def mermaid_chat(code: str) -> str:
@@ -21,8 +24,9 @@ def mermaid_chat(code: str) -> str:
 
 
 # Agent服务配置
-AGENT_SERVICE_URL = "http://127.0.0.1:8503"  # Agent服务地址
-DEFAULT_SESSION_ID = "streamlit-session"
+AGENT_SERVICE_URL = os.getenv(
+    "AGENT_SERVICE_URL", "http://127.0.0.1:8503"
+)  # Agent服务地址
 
 # 初始化聊天存储
 chat_storage = ChatStorage()
@@ -43,7 +47,7 @@ def call_agent_service(question: str, session_id: str = DEFAULT_SESSION_ID) -> s
         url = f"{AGENT_SERVICE_URL}/chat"
         payload = {"session_id": session_id, "question": question}
 
-        response = requests.post(url, json=payload, timeout=30)
+        response = requests.post(url, json=payload, timeout=300)
         response.raise_for_status()
 
         result = response.json()
