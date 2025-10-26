@@ -25,7 +25,7 @@ def analyze_province_flow(
         start: Start time (ISO8601)
         end: End time (ISO8601)
         date_mode: 'daily' | 'total'
-        direction: 'send' | 'arrive'
+        direction: 'send' | 'receive'
         dyna_type: Optional dyna.type filter
 
     Returns:
