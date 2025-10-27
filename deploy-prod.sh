@@ -51,11 +51,6 @@ check_environment() {
         exit 1
     fi
     
-    # 检查必要的环境变量
-    if [ -z "$GOOGLE_API_KEY" ]; then
-        print_warning "GOOGLE_API_KEY 未设置，请检查 .env 文件"
-    fi
-    
     print_success "环境检查完成"
 }
 

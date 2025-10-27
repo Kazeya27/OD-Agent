@@ -32,7 +32,7 @@ AGENT_SERVICE_URL = os.getenv(
 chat_storage = ChatStorage()
 
 
-def call_agent_service(question: str, session_id: str = DEFAULT_SESSION_ID) -> str:
+def call_agent_service(question: str, session_id: str) -> str:
     """
     调用agent服务获取回答
 
@@ -61,7 +61,7 @@ def call_agent_service(question: str, session_id: str = DEFAULT_SESSION_ID) -> s
 
 def call_agent_service_stream(
     question: str,
-    session_id: str = DEFAULT_SESSION_ID,
+    session_id: str,
 ) -> Generator[str, None, None]:
     """
     流式调用agent服务获取回答
@@ -86,52 +86,50 @@ st.set_page_config(page_title="OD流量预测", page_icon="🚗", layout="wide")
 
 st.title("全社会跨区域人员流动量预测智能体")
 
-# 初始化聊天历史
-if "messages" not in st.session_state:
-    # 尝试从本地加载聊天记录
-    saved_messages = chat_storage.load_chat(DEFAULT_SESSION_ID)
-    if saved_messages:
-        st.session_state.messages = saved_messages
-    else:
-        st.session_state.messages = []
-        # 添加初始AI欢迎消息
-        st.session_state.messages.append(
-            {
-                "role": "ai",
-                "content": "我是跨区域人员流动量预测助手，可以帮助您分析出行流量、预测拥堵情况、解释模型结果。",
-            }
-        )
-        # 保存初始消息
-        chat_storage.save_chat(DEFAULT_SESSION_ID, st.session_state.messages)
+# 初始化会话状态
+if "current_session_id" not in st.session_state:
+    # 总是创建新的对话标签页作为默认显示
+    first_session_id = chat_storage.create_new_session("新对话")
+    st.session_state.current_session_id = first_session_id
 
-# 侧边栏
+if "sessions" not in st.session_state:
+    st.session_state.sessions = {}
+
+# 获取当前会话的消息
+current_session_id = st.session_state.current_session_id
+if current_session_id not in st.session_state.sessions:
+    # 从存储加载消息
+    saved_messages = chat_storage.load_chat(current_session_id)
+    st.session_state.sessions[current_session_id] = saved_messages
+
+current_messages = st.session_state.sessions[current_session_id]
+
+# 侧边栏 - 标签页管理
 with st.sidebar:
+    st.subheader("📑 对话标签页")
 
-    # 清空聊天历史按钮
-    if st.button("🗑️ 清空聊天记录", use_container_width=True, type="secondary"):
-        st.session_state.messages = []
-        st.session_state.example_question = None
-        # 清空本地存储
-        chat_storage.delete_session(DEFAULT_SESSION_ID)
-        st.rerun()
+    # 创建新标签页按钮
+    if st.button("➕ 新建对话", use_container_width=True, type="primary"):
+        new_session_id = chat_storage.create_new_session()
+        if new_session_id:
+            st.session_state.current_session_id = new_session_id
+            st.session_state.sessions[new_session_id] = chat_storage.load_chat(
+                new_session_id
+            )
+            st.rerun()
 
     st.divider()
 
-    # 聊天记录管理
-    st.subheader("💾 聊天记录管理")
-
-    # 显示当前会话信息
-    message_count = len(st.session_state.messages)
-    st.info(f"当前会话消息数: {message_count}")
-
-    # 获取所有会话
+    # 显示所有标签页
     all_sessions = chat_storage.get_all_sessions()
     if all_sessions:
-        st.write("历史会话:")
-        for session in all_sessions[:5]:  # 只显示最近5个会话
+        for session in all_sessions:
             session_id = session["session_id"]
+            session_name = session.get("session_name", f"对话_{session_id}")
             message_count = session["message_count"]
             updated_at = session.get("updated_at", "")
+
+            # 格式化时间
             if updated_at:
                 try:
                     from datetime import datetime
@@ -143,26 +141,72 @@ with st.sidebar:
             else:
                 time_str = "未知时间"
 
-            col1, col2 = st.columns([3, 1])
+            # 标签页选择
+            col1, col2, col3 = st.columns([3, 1, 1])
+
             with col1:
-                st.write(f"📝 {message_count}条消息 ({time_str})")
+                # 当前标签页高亮显示
+                if session_id == current_session_id:
+                    st.button(
+                        f"📌 {session_name}",
+                        key=f"tab_{session_id}",
+                        use_container_width=True,
+                        disabled=True,
+                    )
+                else:
+                    if st.button(
+                        f"📄 {session_name}",
+                        key=f"tab_{session_id}",
+                        use_container_width=True,
+                    ):
+                        st.session_state.current_session_id = session_id
+                        if session_id not in st.session_state.sessions:
+                            st.session_state.sessions[session_id] = (
+                                chat_storage.load_chat(session_id)
+                            )
+                        st.rerun()
+
             with col2:
-                if st.button("🗑️", key=f"del_{session_id}", help="删除此会话"):
+                st.caption(f"{message_count}条")
+
+            with col3:
+                if st.button("🗑️", key=f"del_{session_id}", help="删除此标签页"):
                     if chat_storage.delete_session(session_id):
-                        st.success("会话已删除")
+                        # 如果删除的是当前标签页，切换到第一个标签页
+                        if session_id == current_session_id:
+                            remaining_sessions = [
+                                s for s in all_sessions if s["session_id"] != session_id
+                            ]
+                            if remaining_sessions:
+                                st.session_state.current_session_id = (
+                                    remaining_sessions[0]["session_id"]
+                                )
+                            else:
+                                # 创建新的标签页
+                                new_session_id = chat_storage.create_new_session()
+                                st.session_state.current_session_id = new_session_id
+                                st.session_state.sessions[new_session_id] = (
+                                    chat_storage.load_chat(new_session_id)
+                                )
+                        # 从内存中删除
+                        if session_id in st.session_state.sessions:
+                            del st.session_state.sessions[session_id]
+                        st.success("标签页已删除")
                         st.rerun()
                     else:
                         st.error("删除失败")
 
     st.divider()
 
+    # 示例问题
     st.subheader("📋 选择一个示例")
     for k, v in examples.items():
         if st.button(k, key=k, use_container_width=True):
-            # 使用st.rerun()来刷新页面并设置新的用户输入
             st.session_state.example_question = v
             st.rerun()
 
+# 主聊天区域
+st.subheader(f"💬 {chat_storage.get_session_info(current_session_id)['session_name']}")
 
 # 处理示例问题
 if "example_question" in st.session_state and st.session_state.example_question:
@@ -176,17 +220,19 @@ prompt = st.chat_input("请输入您的问题：")
 if prompt:
     user_question = prompt
 
-# 显示聊天历史
-for message in st.session_state.messages:
+# 显示当前标签页的聊天历史
+for message in current_messages:
     with st.chat_message(name=message["role"]):
         st.write(message["content"])
 
 # 处理用户问题
 if user_question:
-    # 添加用户消息到历史
-    st.session_state.messages.append({"role": "user", "content": user_question})
-    # 保存用户消息到本地
-    chat_storage.save_chat(DEFAULT_SESSION_ID, st.session_state.messages)
+    # 添加用户消息到当前会话
+    current_messages.append({"role": "user", "content": user_question})
+    # 保存到存储
+    chat_storage.save_chat(current_session_id, current_messages)
+    # 更新内存中的会话
+    st.session_state.sessions[current_session_id] = current_messages
 
     # 显示用户消息
     with st.chat_message(name="user"):
@@ -195,11 +241,13 @@ if user_question:
     # 生成AI回答
     with st.chat_message(name="ai"):
         with st.status(label="正在生成分析结果", state="running"):
-            answer = call_agent_service(user_question, DEFAULT_SESSION_ID)
+            answer = call_agent_service(user_question, current_session_id)
         st.success("分析结果生成成功")
         st.markdown(answer)
 
-        # 添加AI回答到历史
-        st.session_state.messages.append({"role": "ai", "content": answer})
-        # 保存AI回答到本地
-        chat_storage.save_chat(DEFAULT_SESSION_ID, st.session_state.messages)
+        # 添加AI回答到当前会话
+        current_messages.append({"role": "ai", "content": answer})
+        # 保存到存储
+        chat_storage.save_chat(current_session_id, current_messages)
+        # 更新内存中的会话
+        st.session_state.sessions[current_session_id] = current_messages

@@ -6,17 +6,6 @@
 
 echo "🚀 开始部署 OD-Agent..."
 
-# 检查Docker
-if ! command -v docker &> /dev/null; then
-    echo "❌ Docker 未安装，请先安装 Docker"
-    exit 1
-fi
-
-# 检查Docker Compose
-if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
-    echo "❌ Docker Compose 未安装，请先安装 Docker Compose"
-    exit 1
-fi
 
 # 创建环境文件（如果不存在）
 if [ ! -f ".env" ]; then
