@@ -113,7 +113,8 @@ CREATE TABLE relations (
     destination_id INTEGER NOT NULL REFERENCES places(geo_id), -- 终点geo_id
     cost REAL,                           -- 关系权重/成本 (e.g., distance, travel_time)
     UNIQUE(origin_id, destination_id, type) -- 确保同类型关系的唯一性
-);```
+);
+```
 
 #### 时序流动表 (flows)
 ```sql
