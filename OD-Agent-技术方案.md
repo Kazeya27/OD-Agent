@@ -167,81 +167,66 @@ CREATE INDEX idx_places_name ON places(name);
 - **异步任务**: **Celery** (配合Redis/RabbitMQ) 用于处理耗时的预测任务，避免阻塞API响应。
 - **部署**: **Uvicorn** (ASGI服务器) + **Gunicorn** (进程管理器) + **Docker**。
 
-### 4.2 核心模块与代码结构
+### 4.2 核心模块
 
+#### 路由模块 (routes/)
+- `geo.py`: 地理信息查询
+- `od.py`: OD流动数据查询
+- `predict.py`: 预测服务
+- `analysis.py`: 统计分析服务
+- `metrics.py`: 指标计算服务
+
+#### 业务逻辑模块
+- `database.py`: 数据库连接管理
+- `models.py`: Pydantic数据模型
+- `analysis.py`: 分析算法实现
+- `utils.py`: 工具函数
+
+### 4.3 关键API接口
+
+#### 基础数据查询
+```http
+GET /geo-id?name=北京                    # 根据城市名查询geo_id
+GET /relations/matrix?fill=nan           # 获取关系矩阵
+GET /od/tensor?start=2025-01-01&end=2025-01-31  # 获取OD张量
+GET /od/pair?origin_id=0&destination_id=1&start=2025-01-01&end=2025-01-31  # 获取点对OD序列
 ```
-backend/
-├── app/
-│   ├── api/
-│   │   ├── v1/
-│   │   │   ├── endpoints/
-│   │   │   │   ├── geo.py        # 地理信息
-│   │   │   │   ├── od.py         # OD流动数据
-│   │   │   │   ├── analysis.py   # 统计分析
-│   │   │   │   └── predict.py    # 预测服务
-│   │   │   └── router.py     # API版本路由
-│   ├── core/
-│   │   ├── config.py       # 配置管理
-│   │   └── security.py     # API密钥认证
-│   ├── crud/               # 数据库操作 (CRUD)
-│   ├── models/             # SQLAlchemy模型
-│   ├── schemas/            # Pydantic模型
-│   └── services/           # 复杂业务逻辑 (分析/预测)
-│       └── prediction_service.py
-├── main.py                 # FastAPI应用入口
-└── tests/                  # 单元/集成测试
+
+#### 预测服务
+```http
+POST /predict                            # OD流动预测
+{
+  "start": "2025-01-01T00:00:00Z",
+  "end": "2025-01-31T00:00:00Z",
+  "geo_ids": "0,1,10,11"
+}
 ```
 
-### 4.3 关键API接口设计
+#### 分析服务
+```http
+POST /analyze/province-flow              # 省级流动分析
+POST /analyze/city-flow                  # 城市级流动分析
+POST /analyze/province-corridor          # 省际通道分析
+POST /analyze/city-corridor              # 城市通道分析
+```
 
-采用RESTful设计风格，提供清晰、一致的API。
+#### 评估服务
+```http
+POST /metrics                            # 计算RMSE/MAE/MAPE
+POST /growth                            # 计算增长率
+```
 
-#### `GET /api/v1/geo/places`
-*   **功能**: 根据名称模糊查询`geo_id`。
-*   **参数**: `q: str`
-*   **响应**: `[{"geo_id": 0, "name": "北京", "province": "北京"}]`
+### 4.4 数据处理策略
 
-#### `POST /api/v1/od/series`
-*   **功能**: 查询指定OD对在时间范围内的流动时序数据。
-*   **请求体**:
-    ```json
-    {
-      "origin_id": 0,
-      "destination_id": 1,
-      "start_time": "2025-01-01T00:00:00Z",
-      "end_time": "2025-01-31T23:59:59Z",
-      "missing_value_strategy": "zero"
-    }
-    ```
+**缺失值处理**：
+- `zero`: 用0填充缺失值
+- `null`: 保持null值
+- `skip`: 跳过缺失记录
 
-#### `POST /api/v1/predict/` (异步任务)
-*   **功能**: 触发一个异步的OD流动预测任务。
-*   **请求体**:
-    ```json
-    {
-      "start_time": "2025-02-01T00:00:00Z",
-      "end_time": "2025-02-07T23:59:59Z",
-      "geo_ids": [0, 1, 10, 11]
-    }
-    ```
-*   **响应 (立即返回)**: `{"task_id": "some-celery-task-id"}`
-
-#### `GET /api/v1/predict/results/{task_id}`
-*   **功能**: 查询异步预测任务的状态和结果。
-*   **响应**: `{"status": "SUCCESS", "result": [...]}`
-
-#### `POST /api/v1/analysis/ranking`
-*   **功能**: 对省/市的流入、流出总量进行排名。
-*   **请求体**:
-    ```json
-    {
-      "level": "city", // "province" or "city"
-      "flow_direction": "outflow", // "inflow" or "outflow"
-      "start_time": "2025-01-14T00:00:00Z",
-      "end_time": "2025-02-23T23:59:59Z",
-      "top_k": 10
-    }
-    ```
+**时间窗口处理**：
+- 支持ISO8601时间格式
+- 左闭右开区间查询
+- 自动时间排序和去重
 
 ## 5. 智能体层 (Agent)
 
