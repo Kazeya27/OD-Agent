@@ -20,6 +20,7 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.chat_models import ChatTongyi
+from langchain_openai import ChatOpenAI  # For Doubao API compatibility
 
 # Import tools from tools module
 from tools import TOOLS, set_base_url
@@ -51,6 +52,18 @@ def get_llm(provider: str, model_name: str, temperature: float = 0.0):
         return ChatTongyi(
             model_name=model_name,
             temperature=temperature,
+        )
+    elif provider == "doubao":
+        # Doubao (豆包) support using OpenAI-compatible API
+        doubao_api_key = os.getenv("DOUBAO_API_KEY")
+        if not doubao_api_key:
+            raise RuntimeError("需要设置 DOUBAO_API_KEY 环境变量")
+        return ChatOpenAI(
+            model=model_name,
+            temperature=temperature,
+            openai_api_key=doubao_api_key,
+            openai_api_base=os.getenv("DOUBAO_API_BASE", "https://ark.cn-beijing.volces.com/api/v3"),
+            max_tokens=None,
         )
     raise ValueError(f"不支持的 provider: {provider}")
 
@@ -160,14 +173,14 @@ def main() -> None:
     parser.add_argument(
         "--provider",
         default="gemini",
-        choices=["gemini", "qwen"],
+        choices=["gemini", "qwen", "doubao"],
         help="LLM 服务提供商",
     )
 
     parser.add_argument(
         "--model_name",
         default="gemini-2.5-flash-preview-05-20",
-        help="LLM 模型名称 (Gemini: gemini-2.5-flash-preview-05-20, Qwen: qwen-plus 或 qwen-max)",
+        help="LLM 模型名称 (Gemini: gemini-2.5-flash-preview-05-20, Qwen: qwen-plus 或 qwen-max, Doubao: doubao-pro-32k)",
     )
     parser.add_argument("--temperature", type=float, default=0.6, help="采样温度")
     parser.add_argument("--base_url", type=str, default=None, help="后端服务地址")
@@ -182,6 +195,8 @@ def main() -> None:
             args.model_name = "gemini-2.5-flash-preview-05-20"
         elif args.provider == "qwen":
             args.model_name = "qwen-turbo"
+        elif args.provider == "doubao":
+            args.model_name = "doubao-pro-32k"
 
     if args.base_url:
         set_base_url(args.base_url)
