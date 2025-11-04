@@ -46,8 +46,8 @@ print("=" * 70)
 try:
     result = analyze_province_flow(
         period_type="test",
-        start="2024-01-01T00:00:00Z",
-        end="2024-01-08T00:00:00Z",
+        start="2025-01-01T00:00:00Z",
+        end="2025-01-08T00:00:00Z",
         date_mode="total",
         direction="send",
         dyna_type="state",
@@ -69,8 +69,8 @@ print("=" * 70)
 try:
     result = analyze_city_flow(
         period_type="test",
-        start="2024-01-01T00:00:00Z",
-        end="2024-01-03T00:00:00Z",
+        start="2025-01-01T00:00:00Z",
+        end="2025-01-03T00:00:00Z",
         date_mode="daily",
         direction="send",
         dyna_type="state",
@@ -92,8 +92,8 @@ print("=" * 70)
 try:
     result = analyze_province_corridor(
         period_type="test",
-        start="2024-01-01T00:00:00Z",
-        end="2024-01-31T00:00:00Z",
+        start="2025-01-01T00:00:00Z",
+        end="2025-01-31T00:00:00Z",
         date_mode="total",
         topk=10,
         dyna_type="state",
@@ -115,8 +115,8 @@ print("=" * 70)
 try:
     result = analyze_city_corridor(
         period_type="test",
-        start="2024-01-01T00:00:00Z",
-        end="2024-01-31T00:00:00Z",
+        start="2025-01-01T00:00:00Z",
+        end="2025-01-31T00:00:00Z",
         date_mode="total",
         topk_intra=5,
         topk_inter=10,
@@ -142,6 +142,6 @@ print("✅ 所有测试完成!")
 print("=" * 70)
 print("\n提示:")
 print("  1. 测试数据库包含 24 个城市，16,560 条 OD 记录")
-print("  2. 时间范围: 2024-01-01 到 2024-01-30")
+print("  2. 时间范围: 2025-01-01 到 2025-01-30")
 print("  3. 如需重新生成数据库: python generate_test_db.py")
 print("=" * 70)
