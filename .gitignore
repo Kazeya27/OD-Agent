@@ -7,3 +7,4 @@ logs
 *.pt
 *.pkl
 *.db
+.DS_Store

@@ -158,6 +158,8 @@ class ChatStorage:
                             }
                         )
         except Exception as e:
+            print(file_path)
+            print(chat_data)
             print(f"获取会话列表失败: {e}")
 
         # 按更新时间排序

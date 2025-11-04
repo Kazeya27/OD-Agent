@@ -17,6 +17,11 @@ from chat_storage import ChatStorage
 # 加载环境变量
 load_dotenv()
 
+_HERE = pathlib.Path(__file__).resolve().parent
+
+CHAT_HISTORY_DIR = _HERE / "chat_history"
+CHAT_HISTORY_DIR.mkdir(exist_ok=True)
+
 
 def mermaid_chat(code: str) -> str:
     template = pathlib.Path("mermaid.template.html").read_text()
@@ -29,7 +34,7 @@ AGENT_SERVICE_URL = os.getenv(
 )  # Agent服务地址
 
 # 初始化聊天存储
-chat_storage = ChatStorage()
+chat_storage = ChatStorage(CHAT_HISTORY_DIR)
 
 
 def call_agent_service(question: str, session_id: str) -> str:

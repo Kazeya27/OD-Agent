@@ -129,7 +129,7 @@ def start_frontend():
                 "--server.port",
                 "8501",
                 "--server.address",
-                "0.0.0.0",
+                "127.0.0.1",
             ]
         )
         print_colored("✅ 前端服务启动成功 (端口: 8501)", Colors.GREEN)
