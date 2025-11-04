@@ -381,6 +381,8 @@ def analyze_province_corridor(
         if dyna_type:
             where_parts.append("d.type = ?")
             params.append(dyna_type)
+        # 过滤掉 send_province 和 arrive_province 相同的记录
+        where_parts.append("COALESCE(p1.province, '') != COALESCE(p2.province, '')")
         where_clause = " AND ".join(where_parts)
 
         # 在 SQL 端完成聚合，显著减少数据量
